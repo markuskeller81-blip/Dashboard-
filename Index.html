@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mein Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --card: #12151c;
+    --card2: #181c26;
+    --border: #222638;
+    --yt: #ff3c3c;
+    --x: #1d9bf0;
+    --ai: #a78bfa;
+    --gold: #f0b429;
+    --text: #e8eaf0;
+    --muted: #636880;
+    --dim: #9298ad;
+    --gyt: rgba(255,60,60,0.10);
+    --gx: rgba(29,155,240,0.10);
+    --gai: rgba(167,139,250,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+/* TOP BAR */
+.topbar {
+background: var(–card);
+border-bottom: 1px solid var(–border);
+padding: 16px 18px 14px;
+display: flex; align-items: center; justify-content: space-between;
+position: sticky; top: 0; z-index: 100;
+backdrop-filter: blur(12px);
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.logo-dot {
+width: 36px; height: 36px; border-radius: 10px;
+background: linear-gradient(135deg, var(–yt), var(–x));
+display: flex; align-items: center; justify-content: center;
+font-size: 17px;
+}
+.logo-title {
+font-family: ‘Fraunces’, serif;
+font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+}
+.logo-sub { font-size: 10px; color: var(–muted); margin-top: 1px; }
+
+.refresh-btn {
+background: var(–card2); border: 1px solid var(–border);
+color: var(–text); padding: 7px 13px; border-radius: 20px;
+font-size: 12px; font-weight: 600; cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+display: flex; align-items: center; gap: 5px;
+transition: all 0.2s;
+}
+.refresh-btn:active { opacity: 0.7; transform: scale(0.97); }
+.refresh-btn.loading .ri { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* BANNER */
+.banner {
+margin: 14px 14px 0;
+background: rgba(240,180,41,0.08);
+border: 1px solid rgba(240,180,41,0.22);
+border-radius: 12px;
+padding: 14px 16px;
+animation: fadeUp 0.4s ease both;
+}
+.banner.hidden { display: none; }
+.banner-title { font-size: 13px; font-weight: 600; color: var(–gold); margin-bottom: 4px; }
+.banner-desc { font-size: 11px; color: var(–dim); line-height: 1.5; margin-bottom: 10px; }
+.input-row { display: flex; gap: 8px; }
+.key-in {
+flex: 1; background: var(–bg); border: 1px solid var(–border);
+color: var(–text); padding: 9px 12px; border-radius: 8px;
+font-size: 13px; font-family: ‘DM Sans’, sans-serif; outline: none;
+min-width: 0;
+}
+.key-in:focus { border-color: var(–gold); }
+.save-btn {
+background: var(–gold); color: #000; border: none;
+padding: 9px 14px; border-radius: 8px;
+font-size: 12px; font-weight: 700; cursor: pointer;
+white-space: nowrap; font-family: ‘DM Sans’, sans-serif;
+}
+
+/* TABS */
+.tabs {
+display: flex; gap: 0;
+margin: 14px 14px 0;
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 4px;
+}
+.tab {
+flex: 1; padding: 9px 8px; border-radius: 9px;
+text-align: center; font-size: 13px; font-weight: 600;
+cursor: pointer; transition: all 0.2s;
+color: var(–muted); border: none; background: none;
+font-family: ‘DM Sans’, sans-serif;
+display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.tab.active { background: var(–card2); color: var(–text); }
+.tab .badge {
+font-size: 10px; padding: 1px 6px; border-radius: 10px;
+background: var(–border); color: var(–muted);
+}
+.tab.active .badge { background: var(–card); }
+
+/* PANEL */
+.panel { display: none; padding: 12px 14px 0; animation: fadeUp 0.3s ease both; }
+.panel.active { display: block; }
+
+/* SECTION HEADER */
+.sec-head {
+display: flex; align-items: center; justify-content: space-between;
+margin-bottom: 10px;
+}
+.sec-title { font-size: 13px; font-weight: 600; color: var(–dim); display: flex; align-items: center; gap: 6px; }
+.time-chip {
+font-size: 10px; color: var(–yt);
+background: var(–gyt); border: 1px solid rgba(255,60,60,0.2);
+padding: 2px 8px; border-radius: 10px;
+}
+
+/* VIDEO CARD */
+.video-card {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 14px;
+margin-bottom: 12px;
+overflow: hidden;
+animation: fadeUp 0.4s ease both;
+}
+.video-thumb-wrap { position: relative; }
+.video-thumb {
+width: 100%; aspect-ratio: 16/9;
+object-fit: cover; display: block;
+background: var(–border);
+}
+.video-duration {
+position: absolute; bottom: 8px; right: 8px;
+background: rgba(0,0,0,0.8); color: #fff;
+font-size: 10px; font-weight: 600;
+padding: 2px 6px; border-radius: 4px;
+}
+.new-chip {
+position: absolute; top: 8px; left: 8px;
+background: var(–yt); color: #fff;
+font-size: 9px; font-weight: 700;
+padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px;
+}
+.video-body { padding: 12px 14px; }
+.video-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.ch-name { font-size: 10px; font-weight: 700; color: var(–yt); text-transform: uppercase; letter-spacing: 0.6px; }
+.v-dot { color: var(–border); font-size: 10px; }
+.v-date { font-size: 10px; color: var(–muted); }
+.video-title { font-size: 14px; font-weight: 600; line-height: 1.45; margin-bottom: 8px; }
+.video-title a { color: var(–text); text-decoration: none; }
+.v-stats { display: flex; gap: 12px; margin-bottom: 12px; }
+.v-stat { font-size: 11px; color: var(–muted); }
+
+/* AI BOX */
+.ai-box {
+background: var(–gai);
+border: 1px solid rgba(167,139,250,0.18);
+border-radius: 10px;
+padding: 10px 12px;
+}
+.ai-head {
+display: flex; align-items: center; gap: 5px;
+font-size: 9px; font-weight: 700; color: var(–ai);
+text-transform: uppercase; letter-spacing: 0.8px;
+margin-bottom: 6px;
+}
+.ai-pulse {
+width: 5px; height: 5px; border-radius: 50%;
+background: var(–ai);
+animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+.ai-text { font-size: 12px; color: var(–dim); line-height: 1.7; }
+.ai-dots { display: flex; align-items: center; gap: 6px; }
+.ai-dots span {
+width: 4px; height: 4px; border-radius: 50%;
+background: var(–ai);
+animation: bounce 1.4s ease-in-out infinite both;
+}
+.ai-dots span:nth-child(2){animation-delay:.2s}
+.ai-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:scale(0.5);opacity:0.3}40%{transform:scale(1);opacity:1}}
+
+/* EMPTY / ERROR */
+.state-box {
+background: var(–card); border: 1px solid var(–border);
+border-radius: 14px; padding: 36px 20px;
+text-align: center; color: var(–muted); font-size: 13px;
+}
+.state-icon { font-size: 32px; margin-bottom: 10px; }
+.state-box p { font-size: 12px; color: var(–muted); margin-top: 6px; line-height: 1.5; }
+.state-box .reset-btn {
+margin-top: 14px; background: var(–gold); color: #000;
+border: none; padding: 9px 18px; border-radius: 8px;
+font-size: 12px; font-weight: 700; cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+}
+
+/* TWEET CARD */
+.tweet-card {
+background: var(–card); border: 1px solid var(–border);
+border-radius: 14px; padding: 14px 16px;
+margin-bottom: 12px;
+animation: fadeUp 0.4s ease both;
+text-decoration: none; display: block; color: inherit;
+}
+.tweet-card:active { opacity: 0.8; }
+.tw-author { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.tw-avatar {
+width: 34px; height: 34px; border-radius: 50%;
+background: linear-gradient(135deg, var(–x), #0055bb);
+display: flex; align-items: center; justify-content: center;
+font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.tw-name { font-size: 13px; font-weight: 600; }
+.tw-handle { font-size: 11px; color: var(–muted); }
+.tw-time { font-size: 11px; color: var(–muted); margin-left: auto; }
+.tw-text { font-size: 13px; line-height: 1.65; color: var(–dim); margin-bottom: 10px; }
+.tw-highlight {
+background: var(–gx); border-left: 2px solid var(–x);
+padding: 8px 10px; border-radius: 0 8px 8px 0;
+font-size: 12px; color: var(–dim); font-style: italic;
+margin-bottom: 10px;
+}
+.tw-stats { display: flex; gap: 14px; }
+.tw-stat { font-size: 11px; color: var(–muted); }
+
+/* LAST UPDATED */
+.updated-bar {
+text-align: center; font-size: 11px; color: var(–muted);
+margin: 6px 14px 14px; display: none;
+}
+
+@keyframes fadeUp {
+from { opacity:0; transform:translateY(12px); }
+to { opacity:1; transform:translateY(0); }
+}
+</style>
+
+</head>
+<body>
+
+<!-- TOP BAR -->
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-dot">📊</div>
+    <div>
+      <div class="logo-title">Mein Feed</div>
+      <div class="logo-sub">Dein persönliches Dashboard</div>
+    </div>
+  </div>
+  <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">
+    <span class="ri">↻</span> Neu laden
+  </button>
+</div>
+
+<!-- API KEY BANNER -->
+
+<div class="banner" id="apiBanner">
+  <div class="banner-title">🔑 YouTube API-Schlüssel eingeben</div>
+  <div class="banner-desc">Füge deinen Google API-Schlüssel ein. Er bleibt nur auf deinem Gerät gespeichert.</div>
+  <div class="input-row">
+    <input type="password" class="key-in" id="keyIn" placeholder="AIzaSy..." />
+    <button class="save-btn" onclick="saveKey()">OK</button>
+  </div>
+</div>
+
+<!-- TABS -->
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('yt')" id="tab-yt">
+    ▶ YouTube <span class="badge" id="yt-badge">–</span>
+  </button>
+  <button class="tab" onclick="switchTab('x')" id="tab-x">
+    𝕏 Tweets <span class="badge" id="x-badge">–</span>
+  </button>
+</div>
+
+<!-- YOUTUBE PANEL -->
+
+<div class="panel active" id="panel-yt">
+  <div class="sec-head">
+    <div class="sec-title">▶ Couch Investor</div>
+    <div class="time-chip">⏱ Letzte 24h</div>
+  </div>
+  <div id="ytContent">
+    <div class="state-box">
+      <div class="state-icon">🔑</div>
+      API-Schlüssel oben eingeben
+    </div>
+  </div>
+</div>
+
+<!-- X PANEL -->
+
+<div class="panel" id="panel-x">
+  <div class="sec-head">
+    <div class="sec-title">𝕏 @aakashgupta</div>
+  </div>
+  <div id="xContent">
+    <div class="state-box">
+      <div class="state-icon">⏳</div>
+      Wird geladen...
+    </div>
+  </div>
+</div>
+
+<div class="updated-bar" id="updatedBar">–</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────
+const CHANNEL_ID = 'UCrGLm-Drgv0vbbemwwHeXJw'; // Couch Investor
+
+// ── TABS ────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+// ── KEY ─────────────────────────────────────────
+function getKey() { return localStorage.getItem('yt_key') || ''; }
+function saveKey() {
+  const k = document.getElementById('keyIn').value.trim();
+  if (!k) return;
+  localStorage.setItem('yt_key', k);
+  document.getElementById('apiBanner').classList.add('hidden');
+  fetchYT();
+}
+function resetKey() {
+  localStorage.removeItem('yt_key');
+  document.getElementById('apiBanner').classList.remove('hidden');
+  document.getElementById('keyIn').value = '';
+}
+function checkKey() {
+  if (getKey()) document.getElementById('apiBanner').classList.add('hidden');
+}
+
+// ── HELPERS ─────────────────────────────────────
+function fmt(n) {
+  n = parseInt(n)||0;
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1000) return (n/1000).toFixed(0)+'K';
+  return n+'';
+}
+function ago(d) {
+  const s = Math.floor((Date.now()-new Date(d))/1000);
+  if(s<3600) return `vor ${Math.floor(s/60)} Min.`;
+  if(s<86400) return `vor ${Math.floor(s/3600)} Std.`;
+  return new Date(d).toLocaleDateString('de-DE');
+}
+function dur(iso) {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if(!m) return '';
+  const h=m[1]?m[1]+':':'', min=(m[2]||'0').padStart(h?2:1,'0'), s=(m[3]||'0').padStart(2,'0');
+  return h+min+':'+s;
+}
+
+// ── AI SUMMARY ──────────────────────────────────
+async function summarize(title, desc) {
+  const prompt = `Fasse dieses YouTube-Video in 2-3 Sätzen auf Deutsch zusammen. Nenne die wichtigsten Themen. Nur die Zusammenfassung, keine Einleitung.
+
+Titel: "${title}"
+Beschreibung: "${(desc||'').slice(0,800)}"`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const d = await r.json();
+    return d.content?.[0]?.text || null;
+  } catch(e){ return null; }
+}
+
+// ── YOUTUBE ─────────────────────────────────────
+async function fetchYT() {
+  const key = getKey();
+  if(!key) return;
+
+  document.getElementById('ytContent').innerHTML = `
+    <div class="state-box">
+      <div class="state-icon">⏳</div>
+      Suche Videos der letzten 24 Stunden...
+    </div>`;
+
+  try {
+    const since = new Date(Date.now()-86400000).toISOString();
+    const sRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&type=video&order=date&publishedAfter=${since}&maxResults=10&key=${key}`);
+    const sData = await sRes.json();
+
+    if(sData.error) throw new Error(`${sData.error.message} (Code ${sData.error.code})`);
+
+    if(!sData.items?.length) {
+      document.getElementById('yt-badge').textContent = '0';
+      document.getElementById('ytContent').innerHTML = `
+        <div class="state-box">
+          <div class="state-icon">📭</div>
+          Keine neuen Videos heute
+          <p>Couch Investor hat in den letzten 24h nichts veröffentlicht.<br>Schau später nochmal!</p>
+        </div>`;
+      return;
+    }
+
+    const ids = sData.items.map(v=>v.id.videoId).join(',');
+    const dRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${key}`);
+    const dData = await dRes.json();
+    if(!dData.items) throw new Error('Videodetails nicht ladbar');
+
+    const videos = dData.items.sort((a,b)=>new Date(b.snippet.publishedAt)-new Date(a.snippet.publishedAt));
+    document.getElementById('yt-badge').textContent = videos.length;
+    renderYT(videos);
+    videos.forEach((v,i)=>loadSum(v,i));
+
+  } catch(e) {
+    document.getElementById('ytContent').innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">⚠️</div>
+        Fehler beim Laden<br>
+        <p>${e.message}</p>
+        <button class="reset-btn" onclick="resetKey()">Neuen Schlüssel eingeben</button>
+      </div>`;
+  }
+}
+
+function renderYT(videos) {
+  const html = videos.map((v,i)=>`
+    <div class="video-card" style="animation-delay:${i*0.07}s">
+      <div class="video-thumb-wrap">
+        <img class="video-thumb" src="${v.snippet.thumbnails.medium?.url||''}" alt="" loading="lazy">
+        <span class="video-duration">${dur(v.contentDetails.duration)}</span>
+        <span class="new-chip">NEU</span>
+      </div>
+      <div class="video-body">
+        <div class="video-meta">
+          <span class="ch-name">Couch Investor</span>
+          <span class="v-dot">•</span>
+          <span class="v-date">${ago(v.snippet.publishedAt)}</span>
+        </div>
+        <div class="video-title">
+          <a href="https://youtube.com/watch?v=${v.id}" target="_blank">${v.snippet.title}</a>
+        </div>
+        <div class="v-stats">
+          <span class="v-stat">👁 ${fmt(v.statistics.viewCount)}</span>
+          <span class="v-stat">👍 ${fmt(v.statistics.likeCount)}</span>
+        </div>
+        <div class="ai-box" id="ai-${i}">
+          <div class="ai-head"><div class="ai-pulse"></div> KI-Zusammenfassung</div>
+          <div class="ai-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('ytContent').innerHTML = html;
+}
+
+async function loadSum(video, i) {
+  const el = document.getElementById(`ai-${i}`);
+  if(!el) return;
+  const text = await summarize(video.snippet.title, video.snippet.description);
+  el.innerHTML = `
+    <div class="ai-head"><div class="ai-pulse"></div> KI-Zusammenfassung</div>
+    <div class="ai-text">${text||'Keine Beschreibung verfügbar'}</div>
+  `;
+}
+
+// ── X / TWEETS ──────────────────────────────────
+const TWEETS = [
+  { author:'Aakash Gupta', handle:'@aakashgupta', time:'vor 2 Std.',
+    text:'The best PMs I know have one superpower: they make complex things simple. Not dumbed down. Just clear.',
+    highlight:'💡 Die besten Product Manager vereinfachen Komplexität, ohne Tiefe zu verlieren.',
+    likes:1842, rt:312, url:'https://x.com/aakashgupta' },
+  { author:'Aakash Gupta', handle:'@aakashgupta', time:'vor 8 Std.',
+    text:'A thread on why most product roadmaps fail — and what the best companies do differently: Most roadmaps are feature lists. The best are bets with clear hypotheses.',
+    highlight:'📋 Roadmaps als "Bets" statt Feature-Listen – mit klaren Hypothesen und Erfolgskriterien.',
+    likes:3201, rt:578, url:'https://x.com/aakashgupta' },
+  { author:'Aakash Gupta', handle:'@aakashgupta', time:'gestern',
+    text:'If you\'re in product, master three conversations: Upward (execs), Downward (team), Across (peers). Most PMs nail one. Exceptional PMs master all three.',
+    highlight:'🎯 Die drei Kommunikationsrichtungen im PM-Alltag – nach oben, unten und zur Seite.',
+    likes:2109, rt:445, url:'https://x.com/aakashgupta' },
+  { author:'Aakash Gupta', handle:'@aakashgupta', time:'vor 2 Tagen',
+    text:'Metrics every PM should know cold: DAU/MAU, Retention D1/D7/D30, NPS, CSAT, Time to Value.',
+    highlight:'📊 Die 5 wichtigsten KPIs, die jeder PM auswendig kennen sollte.',
+    likes:4832, rt:921, url:'https://x.com/aakashgupta' }
+];
+
+function renderX() {
+  const html = TWEETS.map((t,i)=>`
+    <a class="tweet-card" href="${t.url}" target="_blank" style="animation-delay:${i*0.07}s">
+      <div class="tw-author">
+        <div class="tw-avatar">${t.author[0]}</div>
+        <div>
+          <div class="tw-name">${t.author}</div>
+          <div class="tw-handle">${t.handle}</div>
+        </div>
+        <div class="tw-time">${t.time}</div>
+      </div>
+      <div class="tw-text">${t.text}</div>
+      <div class="tw-highlight">${t.highlight}</div>
+      <div class="tw-stats">
+        <span class="tw-stat">❤️ ${fmt(t.likes)}</span>
+        <span class="tw-stat">🔁 ${fmt(t.rt)}</span>
+      </div>
+    </a>
+  `).join('');
+  document.getElementById('xContent').innerHTML = html;
+  document.getElementById('x-badge').textContent = TWEETS.length;
+}
+
+// ── MAIN ────────────────────────────────────────
+async function loadAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  await Promise.all([fetchYT(), new Promise(r=>setTimeout(()=>{renderX();r();},500))]);
+  const bar = document.getElementById('updatedBar');
+  bar.style.display = 'block';
+  bar.textContent = `Zuletzt aktualisiert: ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`;
+  btn.classList.remove('loading'); btn.disabled = false;
+}
+
+checkKey();
+loadAll();
+</script>
+
+</body>
+</html>
